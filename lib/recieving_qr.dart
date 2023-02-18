@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/services.dart';
 
 class RecieveQR extends StatefulWidget {
   const RecieveQR({super.key});
@@ -28,6 +29,8 @@ class _RecieveQRState extends State<RecieveQR> {
   bool _enableConsentButton = false;
   String? player_id = '';
   String? qrText = '';
+  String? qrType = '';
+  Widget shoppingCart = Container();
   String? logo = "";
   Widget header = Container(child: const LinearProgressIndicator());
 
@@ -45,38 +48,43 @@ class _RecieveQRState extends State<RecieveQR> {
     return Scaffold(
       floatingActionButton: IconButton(
           onPressed: (() {
-            Navigator.push(
-                context, MaterialPageRoute(builder: ((context) => const Login())));
+            Navigator.push(context,
+                MaterialPageRoute(builder: ((context) => const Login())));
           }),
           icon: Icon(
             Icons.exit_to_app,
             color: Colors.amber.shade50,
           )),
       backgroundColor: Colors.white,
-      body: Container(
-          child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisSize: MainAxisSize.max,
+      body: SafeArea(
+          child: Stack(
         children: [
-          header,
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.max,
             children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.all(Radius.circular(40))),
-                child: QrImage(
-                  data: qrText ?? "123",
-                  version: QrVersions.auto,
-                  size: 250,
-                ),
+              header,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: const BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.all(Radius.circular(40))),
+                    child: QrImage(
+                      data: qrText ?? "123123123",
+                      version: QrVersions.auto,
+                      size: 250,
+                    ),
+                  ),
+                ],
               ),
+              Text(_debugLabelString)
             ],
           ),
-          Text(_debugLabelString)
+          shoppingCart
         ],
       )),
     );
@@ -104,15 +112,18 @@ class _RecieveQRState extends State<RecieveQR> {
               LinearGradient(colors: [Color(0xFFFFCC2F), Color(0xFFEF5734)]),
           borderRadius: BorderRadius.only(bottomRight: Radius.circular(30))),
       child: Column(
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Container(
-                padding:
-                    const EdgeInsets.only(top: 50, left: 10, right: 20, bottom: 20),
+                padding: const EdgeInsets.only(
+                    top: 10, left: 10, right: 20, bottom: 10),
                 decoration: const BoxDecoration(
-                    gradient: LinearGradient(colors: [Color(0xFF000000), Color(0xFF130F40)]),
+                    gradient: LinearGradient(
+                        colors: [Color(0xFFffffff), Color(0xFFffffff)]),
                     borderRadius:
                         BorderRadius.only(bottomRight: Radius.circular(30))),
                 child: Row(
@@ -121,19 +132,57 @@ class _RecieveQRState extends State<RecieveQR> {
                       prefs.getString('logo')!,
                       width: 50,
                     ),
-                    const Text("\t"),
-                     Text(
+                    const Text("\t\t\t"),
+                    Text(
                       "Leone d`oro",
-                      style: GoogleFonts.lato(color: Colors.white, fontSize: 30),
+                      style: GoogleFonts.raleway(
+                          color: Colors.black, fontSize: 30),
                     )
                   ],
                 ),
               )
             ],
           ),
+          Spacer(),
           Row(
-            children: [Column(children: [Text("123")],)],
-          )
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Text(
+                    prefs.getString('last_name')!,
+                    style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white),
+                  ),
+                  Text(
+                    prefs.getString('first_name')!,
+                    style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.white),
+                  )
+                ],
+              ),
+              Column(
+                children: [
+                  CircleAvatar(
+                    backgroundImage: NetworkImage(
+                      prefs.getString('photo')!,
+                    ),
+                    radius: MediaQuery.of(context).size.width * 0.2,
+                  )
+                ],
+              )
+            ],
+          ),
+          Spacer(),
+          Spacer()
         ],
       ),
     );
@@ -177,6 +226,7 @@ class _RecieveQRState extends State<RecieveQR> {
       this.setState(() {
         _debugLabelString = event.notification.jsonRepresentation();
         qrText = event.notification.additionalData!['uuid'];
+        qrType = event.notification.additionalData!['type'];
       });
     });
 

@@ -26,6 +26,7 @@ class _LoginState extends State<Login> {
       headers: {"Content-Type": "application/json"},
     );
     var data = jsonDecode(response.body);
+    
     print(response.statusCode);
     print(data);
     if (response.statusCode != 200) {
@@ -34,6 +35,11 @@ class _LoginState extends State<Login> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', data['key']);
       await prefs.setString('logo', data['logo']);
+      await prefs.setString('first_name', data['first_name']);
+      await prefs.setString('last_name', data['last_name']);
+      await prefs.setString('photo', data['photo']);
+
+
 
       final token = prefs.getString('token') ?? 0;
       print(token);
