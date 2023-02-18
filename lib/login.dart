@@ -15,7 +15,7 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  var URL_API = 'doro.kz';
+  var URL_API = 'new.doro.kz';
   final login = TextEditingController();
   final password = TextEditingController();
   Future<bool> loginTablet(String login, String password) async {
@@ -26,7 +26,7 @@ class _LoginState extends State<Login> {
       headers: {"Content-Type": "application/json"},
     );
     var data = jsonDecode(response.body);
-    
+
     print(response.statusCode);
     print(data);
     if (response.statusCode != 200) {
@@ -38,7 +38,7 @@ class _LoginState extends State<Login> {
       await prefs.setString('first_name', data['first_name']);
       await prefs.setString('last_name', data['last_name']);
       await prefs.setString('photo', data['photo']);
-
+      await prefs.setString('worker_id', data['worker_id']);
 
 
       final token = prefs.getString('token') ?? 0;

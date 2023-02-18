@@ -1,29 +1,27 @@
 import 'dart:convert';
-import 'dart:io';
-import 'package:doro_qr/cartQR.dart';
-import 'package:doro_qr/login.dart';
-import 'package:doro_qr/qr.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:doro_qr/EnterPinCode.dart';
+import 'package:doro_qr/recieving_qr.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'dart:async';
-import 'package:http/http.dart' as http;
-//import OneSignal
-import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:flutter/src/widgets/container.dart';
+import 'package:flutter/src/widgets/framework.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter/services.dart';
-import 'package:wakelock/wakelock.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 
-class RecieveQR extends StatefulWidget {
-  const RecieveQR({super.key});
-
+class CartQR extends StatefulWidget {
+  const CartQR({super.key, required this.qrText});
+  final String? qrText;
   @override
-  State<RecieveQR> createState() => _RecieveQRState();
+  State<CartQR> createState() => _CartQRState();
 }
 
-class _RecieveQRState extends State<RecieveQR> {
+class _CartQRState extends State<CartQR> {
+  var URL_API = 'new.doro.kz';
+  bool _requireConsent = true;
   String _debugLabelString = "";
-  String? tablet_uuid = "";
   String? _emailAddress;
   String? _smsNumber;
   String? _externalUserId;
@@ -32,185 +30,146 @@ class _RecieveQRState extends State<RecieveQR> {
   String? player_id = '';
   String? qrText = '';
   String? qrType = '';
-  Widget qrHolderTop = Container();
-  String? logo = "";
-  Widget header = Container(child: const LinearProgressIndicator());
-  String? worker_qr = "";
-  int schedule_id = 0;
 
-  // CHANGE THIS parameter to true if you want to test GDPR privacy consent
-  bool _requireConsent = true;
-  @override
-  void initState() {
-    super.initState();
-    initPlatformState();
-    Wakelock.enable();
-    Wakelock.toggle(enable: true);
-    loginTablet();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      floatingActionButton: IconButton(
-          onPressed: (() {
-            Navigator.push(context,
-                MaterialPageRoute(builder: ((context) => const Login())));
-          }),
-          icon: Icon(
-            Icons.exit_to_app,
-            color: Colors.amber.shade50,
-          )),
-      backgroundColor: Colors.white,
-      body: SafeArea(
-          child: Stack(
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              header,
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.all(Radius.circular(40))),
-                    child: QrImage(
-                      data: worker_qr!,
-                      version: QrVersions.auto,
-                      size: 250,
-                    ),
-                  ),
-                ],
-              ),
-              Text(_debugLabelString)
-            ],
-          ),
-          qrHolderTop
-        ],
-      )),
-    );
-  }
-
-  void startService() {
-    
-    Widget temp = Container(
-      child: Column(
-        children: [],
-      ),
-    );
-
-  }
-
-  var URL_API = 'new.doro.kz';
-  Future<bool> loginTablet() async {
-    final status = await OneSignal.shared.getDeviceState();
-    final String? osUserID = status?.userId;
+  String? summary = "";
+  
+  Future<void> openShoppingCart() async {
     final prefs = await SharedPreferences.getInstance();
-    var url = Uri.https(URL_API, 'api/tablet/addTablet.php');
+    var url =
+        Uri.https(URL_API, '/api/shopping_cart/getShoppingCartTablet.php');
     var response = await http.post(
       url,
-      body: json.encode({'uuid': osUserID}),
+      body: json.encode({"uuid": widget.qrText}),
       headers: {
         "Content-Type": "application/json",
         "AUTH": prefs.getString('token')!
       },
     );
     var data = jsonDecode(response.body);
-    Widget temp = Container(
-      height: MediaQuery.of(context).size.height * 0.4,
-      decoration: const BoxDecoration(
-          gradient:
-              LinearGradient(colors: [Color(0xFFFFCC2F), Color(0xFFEF5734)]),
-          borderRadius: BorderRadius.only(bottomRight: Radius.circular(30))),
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.only(
-                    top: 10, left: 10, right: 20, bottom: 10),
-                decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                        colors: [Color(0xFFffffff), Color(0xFFffffff)]),
-                    borderRadius:
-                        BorderRadius.only(bottomRight: Radius.circular(30))),
-                child: Row(
+
+    setState(() {
+      summary = data['summary'];
+    });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    initPlatformState();
+    openShoppingCart();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+          child: Container(
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [
+          Color(0xFFFC9842),
+          Color(0xFFFE5F75),
+        ], transform: GradientRotation(-1))),
+        child: Container(
+            width: MediaQuery.of(context).size.width * 0.9,
+            height: MediaQuery.of(context).size.height * 0.7,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                      offset: Offset.fromDirection(10),
+                      blurRadius: 10,
+                      color: Colors.white)
+                ],
+                color: Colors.white,
+                borderRadius: BorderRadius.all(Radius.circular(20))),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Image.network(
-                      prefs.getString('logo')!,
-                      width: 50,
-                    ),
-                    const Text("\t\t\t"),
                     Text(
-                      "Leone d`oro",
-                      style: GoogleFonts.raleway(
-                          color: Colors.black, fontSize: 30),
+                      "Сумма вашей покупки:",
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 30,
+                          color: Colors.black),
+                    ),
+                    Text(
+                      summary ?? "error",
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 60,
+                          color: Colors.black),
                     )
                   ],
                 ),
-              )
-            ],
-          ),
-          Spacer(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Text(
-                    prefs.getString('last_name')!,
-                    style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white),
-                  ),
-                  Text(
-                    prefs.getString('first_name')!,
-                    style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.white),
-                  )
-                ],
-              ),
-              Column(
-                children: [
-                  CircleAvatar(
-                    backgroundImage: NetworkImage(
-                      prefs.getString('photo')!,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                          color: Colors.white.withOpacity(0.5)),
+                      child: QrImage(
+                        data: widget.qrText ?? "123123123",
+                        version: QrVersions.auto,
+                        size: 250,
+                      ),
+                    )
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextButton(
+                      onPressed: (() {}),
+                      child: Container(
+                        padding: EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(30)),
+                            color: Colors.red),
+                        child: Text(
+                          "Отмена",
+                          style: TextStyle(
+                              fontWeight: FontWeight.w400,
+                              fontSize: 20,
+                              color: Colors.white),
+                        ),
+                      ),
                     ),
-                    radius: MediaQuery.of(context).size.width * 0.2,
-                  )
-                ],
-              )
-            ],
-          ),
-          Spacer(),
-          Spacer()
-        ],
-      ),
+                    TextButton(
+                      onPressed: (() {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: ((context) =>
+                                    EnterPinCode(qrText: widget.qrText))));
+                      }),
+                      child: Container(
+                        padding: EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(30)),
+                            color: Colors.white),
+                        child: Text(
+                          "Пин-код",
+                          style: TextStyle(
+                              fontWeight: FontWeight.w400,
+                              fontSize: 20,
+                              color: Colors.black),
+                        ),
+                      ),
+                    )
+                  ],
+                )
+              ],
+            )),
+      )),
     );
-
-    if (response.statusCode != 200) {
-      return false;
-    } else {
-      setState(() {
-        header = temp;
-      });
-      return true;
-    }
   }
 
   Future<void> initPlatformState() async {
@@ -251,7 +210,8 @@ class _RecieveQRState extends State<RecieveQR> {
       if (qrType == "close") {
         print(123);
         setState(() {
-          qrHolderTop = Container();
+          Navigator.push(
+              context, MaterialPageRoute(builder: ((context) => RecieveQR())));
         });
       }
     });

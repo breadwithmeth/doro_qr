@@ -8,6 +8,7 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 //import OneSignal
 import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:wakelock/wakelock.dart';
 
 void main() => runApp(MyApp());
 
@@ -31,6 +32,9 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    Wakelock.disable();
+    Wakelock.enable();
+    Wakelock.toggle(enable: true);
     checkIfUserLoggedIn();
   }
 
