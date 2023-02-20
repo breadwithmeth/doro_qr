@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:doro_qr/cartQR.dart';
 import 'package:doro_qr/login.dart';
 import 'package:doro_qr/qr.dart';
+import 'package:doro_qr/service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -82,7 +83,7 @@ class _RecieveQRState extends State<RecieveQR> {
                     child: QrImage(
                       data: worker_qr!,
                       version: QrVersions.auto,
-                      size: 250,
+                      size: 350,
                     ),
                   ),
                 ],
@@ -123,10 +124,12 @@ class _RecieveQRState extends State<RecieveQR> {
     var data = jsonDecode(response.body);
     Widget temp = Container(
       height: MediaQuery.of(context).size.height * 0.4,
-      decoration: const BoxDecoration(
-          gradient:
-              LinearGradient(colors: [Color(0xFFFFCC2F), Color(0xFFEF5734)]),
-          borderRadius: BorderRadius.only(bottomRight: Radius.circular(30))),
+      decoration:  BoxDecoration(
+          color: Colors.black,
+          // gradient:
+          //     LinearGradient(colors: [Color(0xFFFFCC2F), Color(0xFFEF5734)]),
+          borderRadius: BorderRadius.only(bottomRight: Radius.circular(30)), border: Border.all(color: Colors.black, width: 1)
+          ),
       child: Column(
         mainAxisSize: MainAxisSize.max,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -137,11 +140,13 @@ class _RecieveQRState extends State<RecieveQR> {
               Container(
                 padding: const EdgeInsets.only(
                     top: 10, left: 10, right: 20, bottom: 10),
-                decoration: const BoxDecoration(
+                decoration:  BoxDecoration(
                     gradient: LinearGradient(
                         colors: [Color(0xFFffffff), Color(0xFFffffff)]),
                     borderRadius:
-                        BorderRadius.only(bottomRight: Radius.circular(30))),
+                        BorderRadius.only(bottomRight: Radius.circular(30)), 
+                        // border: Border.all(color: Colors.black, width: 1)
+                        ),
                 child: Row(
                   children: [
                     Image.network(
@@ -253,6 +258,11 @@ class _RecieveQRState extends State<RecieveQR> {
         setState(() {
           qrHolderTop = Container();
         });
+      }
+      if(qrType == "start_training"){
+      print(qrType);
+        Navigator.push(context,
+            MaterialPageRoute(builder: ((context) => Service(qrText: qrText))));
       }
     });
 

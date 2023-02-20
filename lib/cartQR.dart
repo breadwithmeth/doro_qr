@@ -30,9 +30,10 @@ class _CartQRState extends State<CartQR> {
   String? player_id = '';
   String? qrText = '';
   String? qrType = '';
-
+  Map<String, dynamic> data = {};
   String? summary = "";
-  
+  List<Widget> goods = [];
+
   Future<void> openShoppingCart() async {
     final prefs = await SharedPreferences.getInstance();
     var url =
@@ -45,10 +46,25 @@ class _CartQRState extends State<CartQR> {
         "AUTH": prefs.getString('token')!
       },
     );
-    var data = jsonDecode(response.body);
-
+    Map<String, dynamic> dataT = json.decode(utf8.decode(response.bodyBytes));
+    print(data);
+    List goodsArr = dataT['goods'];
+    List<Widget> goodsTemp = [];
+    goodsArr.forEach((element) {
+      goodsTemp.add(Container(
+        padding: EdgeInsets.all(20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(element['name'] +"-"+element['amount'] + "x" + element['price'], style: TextStyle(fontWeight: FontWeight.w500, fontSize: 20),),
+            Text(element['price_total'], style: TextStyle(fontWeight: FontWeight.w900, fontSize: 30),)
+          ],
+        ),
+      ));
+    });
     setState(() {
-      summary = data['summary'];
+      data = dataT;
+      goods = goodsTemp;
     });
   }
 
@@ -63,14 +79,20 @@ class _CartQRState extends State<CartQR> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: TextButton(onPressed: (() {
+        Navigator.push(context,
+                MaterialPageRoute(builder: ((context) => RecieveQR())));
+      }), child: Container(child: Icon(Icons.cancel_outlined), padding: EdgeInsets.symmetric(vertical: 20),),),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
       body: SafeArea(
           child: Container(
         alignment: Alignment.center,
         decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [
-          Color(0xFFFC9842),
-          Color(0xFFFE5F75),
-        ], transform: GradientRotation(-1))),
+            //     gradient: LinearGradient(colors: [
+            //   Color(0xFFFC9842),
+            //   Color(0xFFFE5F75),
+            // ], transform: GradientRotation(-1))
+            ),
         child: Container(
             width: MediaQuery.of(context).size.width * 0.9,
             height: MediaQuery.of(context).size.height * 0.7,
@@ -85,87 +107,93 @@ class _CartQRState extends State<CartQR> {
                 color: Colors.white,
                 borderRadius: BorderRadius.all(Radius.circular(20))),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              mainAxisSize: MainAxisSize.max,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Сумма вашей покупки:",
-                      style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 30,
-                          color: Colors.black),
-                    ),
-                    Text(
-                      summary ?? "error",
-                      style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 60,
-                          color: Colors.black),
-                    )
-                  ],
-                ),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(30)),
-                          color: Colors.white.withOpacity(0.5)),
-                      child: QrImage(
-                        data: widget.qrText ?? "123123123",
-                        version: QrVersions.auto,
-                        size: 250,
-                      ),
-                    )
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextButton(
-                      onPressed: (() {}),
-                      child: Container(
-                        padding: EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(30)),
-                            color: Colors.red),
-                        child: Text(
-                          "Отмена",
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Сумма вашей покупки:",
                           style: TextStyle(
-                              fontWeight: FontWeight.w400,
-                              fontSize: 20,
-                              color: Colors.white),
-                        ),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: (() {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: ((context) =>
-                                    EnterPinCode(qrText: widget.qrText))));
-                      }),
-                      child: Container(
-                        padding: EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(30)),
-                            color: Colors.white),
-                        child: Text(
-                          "Пин-код",
-                          style: TextStyle(
-                              fontWeight: FontWeight.w400,
+                              fontWeight: FontWeight.w700,
                               fontSize: 20,
                               color: Colors.black),
                         ),
-                      ),
-                    )
+                        Text(
+                          data['summary'] ?? "0",
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 60,
+                              color: Colors.black),
+                        )
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(0),
+                          decoration: BoxDecoration(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(30)),
+                              color: Colors.white.withOpacity(0.5)),
+                          child: QrImage(
+                            data: widget.qrText ?? "123123123",
+                            version: QrVersions.auto,
+                            size: 200,
+                          ),
+                        )
+                      ],
+                    ),
+                    // Row(
+                    //   mainAxisAlignment: MainAxisAlignment.center,
+                    //   children: [
+                    //     TextButton(
+                    //       onPressed: (() {}),
+                    //       child: Container(
+                    //         padding: EdgeInsets.all(10),
+                    //         decoration: BoxDecoration(
+                    //             borderRadius: BorderRadius.all(Radius.circular(30)),
+                    //             color: Colors.red),
+                    //         child: Text(
+                    //           "Отмена",
+                    //           style: TextStyle(
+                    //               fontWeight: FontWeight.w400,
+                    //               fontSize: 20,
+                    //               color: Colors.white),
+                    //         ),
+                    //       ),
+                    //     ),
+                    //     TextButton(
+                    //       onPressed: (() {
+                    //         Navigator.push(
+                    //             context,
+                    //             MaterialPageRoute(
+                    //                 builder: ((context) =>
+                    //                     EnterPinCode(qrText: widget.qrText))));
+                    //       }),
+                    //       child: Container(
+                    //         padding: EdgeInsets.all(10),
+                    //         decoration: BoxDecoration(
+                    //             borderRadius: BorderRadius.all(Radius.circular(30)),
+                    //             color: Colors.white),
+                    //         child: Text(
+                    //           "Пин-код",
+                    //           style: TextStyle(
+                    //               fontWeight: FontWeight.w400,
+                    //               fontSize: 20,
+                    //               color: Colors.black),
+                    //         ),
+                    //       ),
+                    //     )
+                    //   ],
+                    // )
                   ],
-                )
+                ),
+                Column(children: goods,)
               ],
             )),
       )),
